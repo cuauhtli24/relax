@@ -31,6 +31,7 @@ import { storage, memoryStorage } from '~/use-cases/services.server';
 import fetchTranslations from '~/use-cases/fetchTranslations.server';
 import { ErrorComponent } from '~/ui/components/error';
 import tailwindTheme from '~/styles/index.css';
+import { SpeedInsights } from '@vercel/speed-insights/remix';
 
 export const meta: MetaFunction = () => {
     return [
@@ -153,6 +154,7 @@ const Document: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                         <ScrollRestoration />
                         <Scripts />
                         <LiveReload />
+                        <SpeedInsights />
                     </body>
                 </html>
             </AppContextProvider>

@@ -30,6 +30,7 @@
         "@splidejs/react-splide": "^0.7.12",
         "@stripe/react-stripe-js": "^1.16.1",
         "@stripe/stripe-js": "^1.46.0",
+        "@vercel/speed-insights": "^2.0.0",
         "isbot": "^3.6.5",
         "json-to-graphql-query": "^2.2.5",
         "jsonwebtoken": "^9",
