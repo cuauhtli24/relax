@@ -1,8 +1,17 @@
 {
-import path from 'path';
-import { default as fsWithCallbacks } from 'fs';
-const fs = fsWithCallbacks.promises;
 import { BackendStorage } from './contracts/BackendStorage';
+
+// Importamos los archivos JSON directamente
+// Esto hace que Vercel los incluya en el paquete final sí o sí
+import en from '../translations/en.json';
+import fr from '../translations/fr.json';
+import no from '../translations/no.json';
+
+const translationsMap: Record<string, any> = {
+    en,
+    fr,
+    no
+};
 
 const toFlatPropertyMap = (obj: any, keySeparator = '.') => {
     const flattenRecursive = (obj: any, parentProperty?: string, propertyMap: Record<string, unknown> = {}) => {
@@ -19,7 +28,6 @@ const toFlatPropertyMap = (obj: any, keySeparator = '.') => {
     return flattenRecursive(obj);
 };
 
-// we saved that in the memory first, then redis if it's available then fs
 export default async (storage: BackendStorage, memoryStorage: BackendStorage, language: string) => {
     const key = `translations-${language}`;
     const memoryCachedFlat = await memoryStorage.get(key);
@@ -28,21 +36,14 @@ export default async (storage: BackendStorage, memoryStorage: BackendStorage, la
         const cachedFlat = await storage.get(key);
 
         if (!cachedFlat) {
-            // Construimos la ruta absoluta para que Vercel no se pierda
-            const filePath = path.resolve(process.cwd(), 'src', 'translations', `${language}.json`);
+            // En lugar de leer el disco, usamos el mapa que ya importamos arriba
+            const rawData = translationsMap[language] || translationsMap['en'];
+            const flat = toFlatPropertyMap(rawData);
             
-            try {
-                const raw = await fs.readFile(filePath, { encoding: 'utf8' });
-                const flat = toFlatPropertyMap(JSON.parse(raw));
-                
-                memoryStorage.set(key, JSON.stringify(flat), 3600 * 4);
-                storage.set(key, JSON.stringify(flat), 3600 * 4);
-                
-                return flat;
-            } catch (error) {
-                console.error(`Error leyendo las traducciones en: ${filePath}`, error);
-                throw error;
-            }
+            memoryStorage.set(key, JSON.stringify(flat), 3600 * 4);
+            storage.set(key, JSON.stringify(flat), 3600 * 4);
+            
+            return flat;
         }
         
         memoryStorage.set(key, cachedFlat, 3600 * 4);
@@ -51,4 +52,5 @@ export default async (storage: BackendStorage, memoryStorage: BackendStorage, la
     
     return JSON.parse(memoryCachedFlat);
 };
+
 };
